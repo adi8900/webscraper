@@ -59,7 +59,7 @@ def verify_nip(nip):
     return checksum == int(nip[9])
 
 def parse_nip(html):
-    nip_pattern = re.compile(r'\b\d{10}\b')
+    nip_pattern = re.compile(r'<[a-zA-Z\s\d="\':/._-]*>(\d{10})<[a-zA-Z\s\d="\':/._-]*>')
     nips = re.findall(nip_pattern, html)
     valid_nips = [nip for nip in nips if verify_nip(nip)]
     return valid_nips
