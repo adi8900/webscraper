@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Web Scraper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <h1>Web Scraper</h1>
+    <form action="/fetch" method="post" id="fetch-form">
+      <label for="url">URL:</label>
+      <input type="text" id="url" name="url">
+      
+      <label for="data_type">Select Data Type:</label>
+      <select id="data_type" name="data_type">
+        <option value="all">All</option>
+        <option value="emails">Emails</option>
+        <option value="phone_numbers">Phone Numbers</option>
+        <option value="images">Images</option>
+        <option value="videos">Videos</option>
+      </select>
+      
+      <button type="submit">Fetch</button>
+    </form>
+    {% if data %}
+    <h2>Results:</h2>
+    {% if data.emails %}
+      <button class="collapsible">Emails</button>
+      <div class="content">
+        <ul>
+        {% for email in data.emails %}
+          <li><a href="mailto:{{ email }}">{{ email }}</a></li>
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    {% if data.phone_numbers %}
+      <button class="collapsible">Phone Numbers</button>
+      <div class="content">
+        <ul>
+        {% for phone in data.phone_numbers %}
+           <li><a href="tel:{{ phone }}">{{ phone }}</a></li>
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    {% if data.images %}
+      <button class="collapsible">Images</button>
+      <div class="content">
+        <ul>
+        {% for img in data.images %}
+          <li><img src="{{ img }}" alt="Image" style="max-width:200px;"></li>
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    {% if data.videos %}
+      <button class="collapsible">Videos</button>
+      <div class="content">
+        <ul>
+        {% for videos in data.videos %}
+          <li><iframe src="{{ videos }}" frameborder="0" allowfullscreen style="max-width: 600px; width: 100%; height: 315px;"></iframe></li>
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    {% endif %}
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
