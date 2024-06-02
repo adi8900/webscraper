@@ -41,6 +41,7 @@ def stats_data():
                 'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
                 'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
                 'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
+                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
                 'total_scrapes': {'$sum': 1}
             }
         },
@@ -70,6 +71,7 @@ def stats_plot_png():
                 'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
                 'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
                 'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
+                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
                 'total_scrapes': {'$sum': 1}
             }
         },
@@ -78,7 +80,8 @@ def stats_plot_png():
                 'total_emails': {'$ne': None},
                 'total_phone_numbers': {'$ne': None},
                 'total_images': {'$ne': None},
-                'total_videos': {'$ne': None}
+                'total_videos': {'$ne': None},
+                'total_nips': {'$ne': None}
             }
         },
         {
@@ -94,6 +97,7 @@ def stats_plot_png():
     phones = []
     images = []
     videos = []
+    nips = []
 
     for stat in stats:
         if stat['_id'] is not None:
@@ -104,6 +108,7 @@ def stats_plot_png():
                 phones.append(stat['total_phone_numbers'])
                 images.append(stat['total_images'])
                 videos.append(stat['total_videos'])
+                nips.append(stat['total_nips'])
             else:
                 print(f"Could not extract domain from URL: {stat['_id']}")
         else:
@@ -122,6 +127,7 @@ def stats_plot_png():
         bars_phones = ax.bar(index, phones, bar_width, bottom=emails, label='Phone Numbers', alpha=opacity, color='r')
         bars_images = ax.bar(index, images, bar_width, bottom=np.array(emails) + np.array(phones), label='Images', alpha=opacity, color='g')
         bars_videos = ax.bar(index, videos, bar_width, bottom=np.array(emails) + np.array(phones) + np.array(images), label='Videos', alpha=opacity, color='y')
+        bars_nips = ax.bar(index, nips, bar_width, bottom=np.array(emails) + np.array(phones) + np.array(images) + np.array(videos), label='NIPs', alpha=opacity, color='purple')
 
         ax.set_xlabel('Domains', fontsize=14)
         ax.set_ylabel('Counts', fontsize=14)
@@ -152,6 +158,7 @@ def stats_plot_html():
                 'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
                 'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
                 'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
+                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
                 'total_scrapes': {'$sum': 1}
             }
         },
@@ -160,7 +167,8 @@ def stats_plot_html():
                 'total_emails': {'$ne': None},
                 'total_phone_numbers': {'$ne': None},
                 'total_images': {'$ne': None},
-                'total_videos': {'$ne': None}
+                'total_videos': {'$ne': None},
+                'total_nips': {'$ne': None}
             }
         },
         {
@@ -176,6 +184,7 @@ def stats_plot_html():
     phones = []
     images = []
     videos = []
+    nips = []
 
     for stat in stats:
         if stat['_id'] is not None:
@@ -186,6 +195,7 @@ def stats_plot_html():
                 phones.append(stat['total_phone_numbers'])
                 images.append(stat['total_images'])
                 videos.append(stat['total_videos'])
+                nips.append(stat['total_nips'])
             else:
                 print(f"Could not extract domain from URL: {stat['_id']}")
         else:
@@ -202,7 +212,8 @@ def stats_plot_html():
         bars_phones = ax.bar(x, phones, width, label='Phone Numbers', color='r', alpha=0.7, bottom=emails)
         bars_images = ax.bar(x, images, width, label='Images', color='g', alpha=0.7, bottom=[i+j for i,j in zip(emails, phones)])
         bars_videos = ax.bar(x, videos, width, label='Videos', color='y', alpha=0.7, bottom=[i+j+k for i,j,k in zip(emails, phones, images)])
-
+        bars_nips = ax.bar(x, nips, width, label='NIPs', color='purple', alpha=0.7, bottom=[i+j+k+l for i,j,k,l in zip(emails, phones, images, videos)])
+        
         ax.set_xlabel('Domains')
         ax.set_ylabel('Counts')
         ax.set_title('Scraping Stats')
@@ -217,8 +228,8 @@ def stats_plot_html():
         for i, domain in enumerate(domains):
             ax.text(i, -0.1, domain, rotation=45, ha='right', fontsize=10)
 
-        tooltip_labels = [f'{domain}\nEmails: {email}\nPhone Numbers: {phone}\nImages: {image}\nVideos: {video}'
-                          for domain, email, phone, image, video in zip(domains, emails, phones, images, videos)]
+        tooltip_labels = [f'{domain}\nEmails: {email}\nPhone Numbers: {phone}\nImages: {image}\nVideos: {video}\nNIPs: {nip}'
+                          for domain, email, phone, image, video, nip in zip(domains, emails, phones, images, videos, nips)]
 
         scatter = ax.scatter(x, [0]*len(domains), s=0, color='none')
         tooltip = mpld3.plugins.PointLabelTooltip(scatter, labels=tooltip_labels)
@@ -240,6 +251,7 @@ def download_csv():
                 'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
                 'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
                 'total_addresses': {'$sum': {'$cond': [{'$isArray': '$addresses'}, {'$size': '$addresses'}, 0]}},
+                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
                 'total_scrapes': {'$sum': 1}
             }
         },
@@ -253,9 +265,9 @@ def download_csv():
 
     si = io.StringIO()
     cw = csv.writer(si)
-    cw.writerow(['URL', 'Total Emails', 'Total Phone Numbers', 'Total Images', 'Total Addresses', 'Total Scrapes'])
+    cw.writerow(['URL', 'Total Emails', 'Total Phone Numbers', 'Total Images', 'Total Addresses', 'Total NIPs', 'Total Scrapes'])
     for stat in stats:
-        cw.writerow([stat['_id'], stat['total_emails'], stat['total_phone_numbers'], stat['total_images'], stat['total_addresses'], stat['total_scrapes']])
+        cw.writerow([stat['_id'], stat['total_emails'], stat['total_phone_numbers'], stat['total_images'], stat['total_addresses'], stat['total_nips'], stat['total_scrapes']])
 
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=scraping_stats.csv"

@@ -40,6 +40,31 @@ def parse_videos(html, base_url):
         videos.append(urljoin(base_url, iframe_src))
     return videos
 
+def verify_nip(nip):
+    nip = ''.join(filter(str.isdigit, nip))
+
+    if len(nip) != 10:
+        return False
+
+    if all(digit == '0' for digit in nip):
+        return False
+
+    weights = [6, 5, 7, 2, 3, 4, 5, 6, 7]
+    suma = sum(int(nip[i]) * weights[i] for i in range(9))
+    checksum = suma % 11
+
+    if checksum == 10:
+        checksum = 0
+
+    return checksum == int(nip[9])
+
+def parse_nip(html):
+    nip_pattern = re.compile(r'\b\d{10}\b')
+    nips = re.findall(nip_pattern, html)
+    valid_nips = [nip for nip in nips if verify_nip(nip)]
+    return valid_nips
+
+
 def fetch_and_parse(url, data_type):
     html = fetch(url)
     base_url = '/'.join(url.split('/')[:3])
@@ -53,5 +78,7 @@ def fetch_and_parse(url, data_type):
         parsed_data['images'] = parse_images(html, base_url)
     if 'videos' in data_type or 'all' in data_type:
         parsed_data['videos'] = parse_videos(html, base_url)
+    if 'nips' in data_type or 'all' in data_type:
+        parsed_data['nips'] = parse_nip(html)
 
     return parsed_data

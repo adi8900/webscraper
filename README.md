@@ -9,7 +9,7 @@ Użyte technologie oraz biblioteki:
 
 Podział na rozproszone kontenery:
 - Frontend czyli aplikacja napisana w Flasku zapewniająca GUI i łączy się z silnikiem wykonującym całą robote, dodatkowo tutaj tworzone są wykresy wykorzystując dane z bazy mongo
-- Engine czyli silnik, który parsuje scrapowane strony wydzielając z nich: numery telefonów, filmy, obrazy i adresy email
+- Engine czyli silnik, który parsuje scrapowane strony wydzielając z nich: numery telefonów, filmy, obrazy, numery NIP oraz adresy email
 - Parsowanie jest rozproszone efektywnie między rdzeniami procesora, z biblioteki multiprocessing za pomocą funkcji cpu.count jest ladowana ilość rdzeni i procesy ustawiane trafiaja do kolejek, które się nie blokują - multiprocessing.Manager() oraz Quene() - taki sposób umożliwia rozsądne skalowanie i znaczne przyspieszenie działania
 - Kontener z MongoDB zawierający obraz bazy danych
 

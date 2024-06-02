@@ -18,7 +18,8 @@ async def run_task(url, data_types):
         tasks.append(async_fetch_and_parse(url, ['images']))
     if 'videos' in data_types or 'all' in data_types:
         tasks.append(async_fetch_and_parse(url, ['videos']))
-    
+    if 'nips' in data_types or 'all' in data_types:
+        tasks.append(async_fetch_and_parse(url, ['nips']))
     results = await asyncio.gather(*tasks)
     final_result = {'url': url}
     for result in results:

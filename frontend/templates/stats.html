@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <a href="/" class="home-button">Home</a>
     <h1>Statistics</h1>
+    <a href="/stats/plot/html" class="chart-button">View Dynamic Chart</a>
     <div>
-         <img src="/stats/plot" alt="Scraping Stats Plot">
+        <img src="/stats/plot/png" alt="Scraping Stats Plot">
     </div>
-	 <div>
-         <a href="/download/csv" class="btn btn-primary">Download CSV</a>
+    <div>
+        <a href="/download/csv" class="btn btn-primary">Download CSV</a>
     </div>
 </body>
 </html>
