@@ -113,17 +113,26 @@ def stats_plot_png():
         fig, ax = plt.subplots()
         fig.set_size_inches(19.2, 10.8)
 
-        ax.bar(domains, emails, label='Emails', color='b', alpha=0.6)
-        ax.bar(domains, phones, label='Phone Numbers', color='r', alpha=0.6, bottom=emails)
-        ax.bar(domains, images, label='Images', color='g', alpha=0.6, bottom=[i+j for i,j in zip(emails, phones)])
-        ax.bar(domains, videos, label='Videos', color='y', alpha=0.6, bottom=[i+j+k for i,j,k in zip(emails, phones, images)])
+        bar_width = 0.35
+        opacity = 0.8
 
-        ax.set_xlabel('Domains')
-        ax.set_ylabel('Counts')
-        ax.set_title('Scraping Stats')
-        ax.legend()
-    
-        plt.xticks(rotation=90)
+        index = np.arange(len(domains))
+
+        bars_emails = ax.bar(index, emails, bar_width, label='Emails', alpha=opacity, color='b')
+        bars_phones = ax.bar(index, phones, bar_width, bottom=emails, label='Phone Numbers', alpha=opacity, color='r')
+        bars_images = ax.bar(index, images, bar_width, bottom=np.array(emails) + np.array(phones), label='Images', alpha=opacity, color='g')
+        bars_videos = ax.bar(index, videos, bar_width, bottom=np.array(emails) + np.array(phones) + np.array(images), label='Videos', alpha=opacity, color='y')
+
+        ax.set_xlabel('Domains', fontsize=14)
+        ax.set_ylabel('Counts', fontsize=14)
+        ax.set_title('Scraping Stats', fontsize=18)
+        ax.set_xticks(index)
+        ax.set_xticklabels(domains, rotation=45, ha='right', fontsize=12)
+        ax.legend(fontsize=12)
+        ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.7)
+        ax.set_axisbelow(True)
+
+        fig.tight_layout()
 
         buf = io.BytesIO()
         plt.savefig(buf, format='png')
