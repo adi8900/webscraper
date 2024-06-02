@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Form handling
     const form = document.getElementById('fetch-form');
     const urlInput = document.getElementById('url');
 
@@ -21,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('url', formattedUrl);
     });
 
-    // Collapsible sections
     var collapsibles = document.getElementsByClassName("collapsible");
 
     for (var i = 0; i < collapsibles.length; i++) {
