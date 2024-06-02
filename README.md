@@ -36,7 +36,7 @@ minikube image load projekt_engine:latest
 
 minikube image load projekt_frontend:latest
 
-minikube image load mongo:4.4
+minikube image load mongo:latest
 
 Po załadowaniu obrazów należy zastosować pliki yaml, aby stworzyły się usługi na bazie obrazów zbudowanych z dockera wykorzystując:
 
