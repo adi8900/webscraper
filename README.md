@@ -10,7 +10,8 @@ Użyte technologie oraz biblioteki:
 Podział na rozproszone kontenery:
 - Frontend czyli aplikacja napisana w Flasku zapewniająca GUI i łączy się z silnikiem wykonującym całą robote, dodatkowo tutaj tworzone są wykresy wykorzystując dane z bazy mongo
 - Engine czyli silnik, który parsuje scrapowane strony wydzielając z nich: numery telefonów, filmy, obrazy, numery NIP oraz adresy email
-- Parsowanie jest rozproszone efektywnie między rdzeniami procesora, z biblioteki multiprocessing za pomocą funkcji cpu.count jest ladowana ilość rdzeni i procesy ustawiane trafiaja do kolejek, które się nie blokują - multiprocessing.Manager() oraz Quene() - taki sposób umożliwia rozsądne skalowanie i znaczne przyspieszenie działania
+- Parsowanie jak i pobieranie stron jest rozproszone efektywnie między rdzeniami procesora, z biblioteki multiprocessing za pomocą funkcji cpu.count jest ladowana ilość rdzeni i procesy ustawiane trafiaja do kolejek, które się nie blokują - multiprocessing.Manager() oraz manager.Queue() - taki sposób umożliwia rozsądne skalowanie i znaczne przyspieszenie działania
+- Ilość parsowanych podstron = ilość rdzeni procesora * 2, w testach scrapera okazała się to być najbardziej efektywna droga bez zabijania wydajności i samej aplikacji jak i zarazem procesora
 - Kontener z MongoDB zawierający obraz bazy danych
 
 Kompatybilność z systemami do konteneryzacji:
@@ -29,8 +30,9 @@ Kubernetes:
 
 Aby uruchomić aplikacje w kubernetesie to trzeba dodatkowo poza krokami wyżej:
 
+- Jeśli podstawienie całych kontenerów dodatkowo w dockerze jest uciążliwy/niemożliwy można recznie zbudować poszególne obrazy wykorzystując docker build zgodnie z podaną dokumentacją
 - Zatrzymać uruchomione kontenery w dockerze (docker stop nazwa albo poprzez aplikacje Docker Desktop czy inne)
-- Po przejściu do folderu z pobranym repozytorium wpisać w celu załadowania lokalnych obrazów(minikube musi być wcześniej zainstalowany) następujące komendy:
+- Po przejściu do folderu z pobranym repozytorium wpisać w celu załadowania lokalnych obrazów(minikube musi być wcześniej zainstalowany) następujące komendy (komendy biorą pod uwagę to, że użytkownik sklonował repozytorium do folderu projekt i obrazy w dockerze analogicznie się nazywaja):
 
 minikube image load projekt_engine:latest
 
@@ -48,6 +50,7 @@ kubectl apply -f mongodb-deployment.yaml
 
 Nie można zapomnieć o uruchomieniu wcześniej kubernetesa wykorzystując minikube start (ewentualnie z flaga --listen-address=0.0.0.0 aby słuchało na każdym interfejsie sieciowym, nie tylko na localhost)
 
-Gotowe, po wejściu w adres IP poda stworzonego przez kubernetes(kubectl get services) i wygenerowaniu adresu proxy można uruchomić aplikacje
-W razie jakby ktoś potrzebował uruchomić to w lokalnej sieci to trzeba wykorzystać port forwarding wraz z listen-address 0.0.0.0, wiecej informacji tutaj: https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
+Gotowe, po wejściu w adres IP poda stworzonego przez kubernetes(kubectl get services) i wygenerowaniu adresu proxy można uruchomić aplikację.
+
+W razie jakby ktoś potrzebował uruchomić to w lokalnej sieci albo poza nią mając publiczny adres IP/tunel VPN to trzeba wykorzystać port forwarding wraz z listen-address 0.0.0.0, wiecej informacji tutaj: https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
 
