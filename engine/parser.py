@@ -64,7 +64,6 @@ def parse_nip(html):
     valid_nips = [nip for nip in nips if verify_nip(nip)]
     return valid_nips
 
-
 def fetch_and_parse(url, data_type):
     html = fetch(url)
     base_url = '/'.join(url.split('/')[:3])
@@ -82,3 +81,10 @@ def fetch_and_parse(url, data_type):
         parsed_data['nips'] = parse_nip(html)
 
     return parsed_data
+    
+def fetch_subpages(url, num_subpages):
+    html = fetch(url)
+    soup = BeautifulSoup(html, 'html.parser')
+    links = [a['href'] for a in soup.find_all('a', href=True)]
+    full_links = [urljoin(url, link) for link in links if link.startswith('http://') or link.startswith('https://')]
+    return full_links[:num_subpages]

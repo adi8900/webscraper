@@ -27,18 +27,27 @@ async def run_task(url, data_types):
     
     return final_result
 
-def worker(url, data_types, queue):
-    result = asyncio.run(run_task(url, data_types))
-    queue.put(result)
+def worker(url, data_types, queue, subpages):
+    loop = asyncio.get_event_loop()
+    results = loop.run_until_complete(run_task(url, data_types))
+    queue.put(results)
+    for subpage in subpages:
+        results = loop.run_until_complete(run_task(subpage, data_types))
+        queue.put(results)
 
 def run_multiprocessing_task(url, data_types):
     cpu_count = multiprocessing.cpu_count()
+    num_subpages = cpu_count * 2
+    subpages = parser.fetch_subpages(url, num_subpages)
+
     manager = multiprocessing.Manager()
     queue = manager.Queue()
     processes = []
 
-    for _ in range(cpu_count):
-        p = multiprocessing.Process(target=worker, args=(url, data_types, queue))
+    for i in range(cpu_count):
+        start = i * 2
+        end = start + 2
+        p = multiprocessing.Process(target=worker, args=(url, data_types, queue, subpages[start:end]))
         processes.append(p)
         p.start()
 
@@ -47,6 +56,14 @@ def run_multiprocessing_task(url, data_types):
 
     result = {}
     while not queue.empty():
-        result.update(queue.get())
+        sub_result = queue.get()
+        if 'url' not in result:
+            result['url'] = sub_result['url']
+        for key in sub_result:
+            if key != 'url':
+                if key not in result:
+                    result[key] = sub_result[key]
+                else:
+                    result[key].extend(sub_result[key])
 
     return result
