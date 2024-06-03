@@ -2,7 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from bson import ObjectId
 import worker
-from pymongo import MongoClient, UpdateOne
+from pymongo import MongoClient
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -27,28 +27,18 @@ class RequestHandler(BaseHTTPRequestHandler):
         client = MongoClient('mongodb://mongodb:27017')
         db = client['web_scraper']
         collection = db['data']
+
         unique_data = {
+            'url': result['url'],
             'emails': list(set(result.get('emails', []))),
             'phone_numbers': list(set(result.get('phone_numbers', []))),
             'images': list(set(result.get('images', []))),
             'videos': list(set(result.get('videos', []))),
             'nips': list(set(result.get('nips', []))),
-            'url': result['url']
+            'subpages': result.get('subpages', [])
         }
-        operations = []
-        for email in unique_data['emails']:
-            operations.append(UpdateOne({'emails': email}, {'$set': {'emails': email}}, upsert=True))
-        for phone_number in unique_data['phone_numbers']:
-            operations.append(UpdateOne({'phone_numbers': phone_number}, {'$set': {'phone_numbers': phone_number}}, upsert=True))
-        for image in unique_data['images']:
-            operations.append(UpdateOne({'images': image}, {'$set': {'images': image}}, upsert=True))
-        for video in unique_data['videos']:
-            operations.append(UpdateOne({'videos': video}, {'$set': {'videos': video}}, upsert=True))
-        for nip in unique_data['nips']:
-            operations.append(UpdateOne({'nips': nip}, {'$set': {'nips': nip}}, upsert=True))
 
-        if operations:
-            collection.bulk_write(operations)
+        collection.insert_one(unique_data)
 
         self._set_response()
         self.wfile.write(json.dumps(unique_data, cls=JSONEncoder).encode('utf-8'))

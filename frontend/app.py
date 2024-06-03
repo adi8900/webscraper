@@ -24,8 +24,19 @@ def fetch():
     data_type = request.form.getlist('data_type')
     response = requests.post('http://engine:8000/parse', json={'url': url, 'data_type': data_type})
     data = response.json()
-    collection.insert_one(data)  
-    return render_template('index.html', data=data)
+    main_data = {
+        'url': data['url'],
+        'emails': data.get('emails', []),
+        'phone_numbers': data.get('phone_numbers', []),
+        'images': data.get('images', []),
+        'videos': data.get('videos', []),
+        'nips': data.get('nips', []),
+        'subpages': data.get('subpages', [])
+    }
+
+    collection.insert_one(main_data)
+    
+    return render_template('index.html', main_data=main_data)
 
 @app.route('/stats')
 def stats():
@@ -37,11 +48,76 @@ def stats_data():
         {
             '$group': {
                 '_id': '$url',
-                'total_emails': {'$sum': {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]}},
-                'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
-                'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
-                'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
-                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
+                'total_emails': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.emails'}, {'$size': '$$subpage.emails'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_phone_numbers': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.phone_numbers'}, {'$size': '$$subpage.phone_numbers'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_images': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.images'}, {'$size': '$$subpage.images'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_videos': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.videos'}, {'$size': '$$subpage.videos'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_nips': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.nips'}, {'$size': '$$subpage.nips'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
                 'total_scrapes': {'$sum': 1}
             }
         },
@@ -51,8 +127,17 @@ def stats_data():
             }
         }
     ]
+    
     stats = list(collection.aggregate(pipeline))
+    
+    for stat in stats:
+        stat['total_emails'] = stat['total_emails'] // 2
+        stat['total_phone_numbers'] = stat['total_phone_numbers'] // 2
+        stat['total_images'] = stat['total_images'] // 2
+        stat['total_videos'] = stat['total_videos'] // 2
+        stat['total_nips'] = stat['total_nips'] // 2
     return jsonify(stats)
+
 
 def extract_domain(url):
     match = re.search(r'https?://(?:www\.)?([^/]+)', url)
@@ -67,30 +152,92 @@ def stats_plot_png():
         {
             '$group': {
                 '_id': '$url',
-                'total_emails': {'$sum': {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]}},
-                'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
-                'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
-                'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
-                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
-                'total_scrapes': {'$sum': 1}
-            }
-        },
-        {
-            '$match': {
-                'total_emails': {'$ne': None},
-                'total_phone_numbers': {'$ne': None},
-                'total_images': {'$ne': None},
-                'total_videos': {'$ne': None},
-                'total_nips': {'$ne': None}
+                'total_emails': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.emails'}, {'$size': '$$subpage.emails'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_phone_numbers': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.phone_numbers'}, {'$size': '$$subpage.phone_numbers'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_images': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.images'}, {'$size': '$$subpage.images'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_videos': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.videos'}, {'$size': '$$subpage.videos'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_nips': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.nips'}, {'$size': '$$subpage.nips'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                }
             }
         },
         {
             '$sort': {
-                'total_scrapes': -1
+                'total_images': -1
             }
         }
     ]
     stats = list(collection.aggregate(pipeline))
+
+    for stat in stats:
+        stat['total_emails'] = stat['total_emails'] // 2
+        stat['total_phone_numbers'] = stat['total_phone_numbers'] // 2
+        stat['total_images'] = stat['total_images'] // 2
+        stat['total_videos'] = stat['total_videos'] // 2
+        stat['total_nips'] = stat['total_nips'] // 2
 
     domains = []
     emails = []
@@ -154,30 +301,93 @@ def stats_plot_html():
         {
             '$group': {
                 '_id': '$url',
-                'total_emails': {'$sum': {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]}},
-                'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
-                'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
-                'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
-                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
-                'total_scrapes': {'$sum': 1}
-            }
-        },
-        {
-            '$match': {
-                'total_emails': {'$ne': None},
-                'total_phone_numbers': {'$ne': None},
-                'total_images': {'$ne': None},
-                'total_videos': {'$ne': None},
-                'total_nips': {'$ne': None}
+                'total_emails': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.emails'}, {'$size': '$$subpage.emails'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_phone_numbers': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.phone_numbers'}, {'$size': '$$subpage.phone_numbers'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_images': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.images'}, {'$size': '$$subpage.images'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_videos': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.videos'}, {'$size': '$$subpage.videos'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_nips': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.nips'}, {'$size': '$$subpage.nips'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                }
             }
         },
         {
             '$sort': {
-                'total_scrapes': -1
+                'total_images': -1
             }
         }
     ]
+
     stats = list(collection.aggregate(pipeline))
+
+    for stat in stats:
+        stat['total_emails'] = stat['total_emails'] // 2
+        stat['total_phone_numbers'] = stat['total_phone_numbers'] // 2
+        stat['total_images'] = stat['total_images'] // 2
+        stat['total_videos'] = stat['total_videos'] // 2
+        stat['total_nips'] = stat['total_nips'] // 2
 
     domains = []
     emails = []
@@ -250,7 +460,7 @@ def download_csv():
                 'total_emails': {'$sum': {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]}},
                 'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
                 'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
-                'total_addresses': {'$sum': {'$cond': [{'$isArray': '$addresses'}, {'$size': '$addresses'}, 0]}},
+                'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
                 'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
                 'total_scrapes': {'$sum': 1}
             }

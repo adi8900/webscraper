@@ -55,15 +55,21 @@ def run_multiprocessing_task(url, data_types):
         p.join()
 
     result = {}
+    subpage_results = []
+
     while not queue.empty():
         sub_result = queue.get()
         if 'url' not in result:
             result['url'] = sub_result['url']
-        for key in sub_result:
-            if key != 'url':
-                if key not in result:
-                    result[key] = sub_result[key]
-                else:
-                    result[key].extend(sub_result[key])
+        if sub_result['url'] == url:
+            for key in sub_result:
+                if key != 'url':
+                    if key not in result:
+                        result[key] = sub_result[key]
+                    else:
+                        result[key].extend(sub_result[key])
+        else:
+            subpage_results.append(sub_result)
 
+    result['subpages'] = subpage_results
     return result

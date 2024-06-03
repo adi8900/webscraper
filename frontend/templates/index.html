@@ -24,59 +24,117 @@
         
         <button type="submit">Fetch</button>
     </form>
-    {% if data %}
-    <h2>Results:</h2>
-    {% if data.emails %}
-        <button class="collapsible">Emails ({{ data.emails|length }})</button>
+    {% if main_data %}
+    <h2>Results for {{ main_data.url }}:</h2>
+    {% if main_data.emails %}
+        <button class="collapsible">Emails ({{ main_data.emails|length }})</button>
         <div class="content">
             <ul>
-            {% for email in data.emails %}
+            {% for email in main_data.emails %}
                 <li><a href="mailto:{{ email }}">{{ email }}</a></li>
             {% endfor %}
             </ul>
         </div>
     {% endif %}
-    {% if data.phone_numbers %}
-        <button class="collapsible">Phone Numbers ({{ data.phone_numbers|length }})</button>
+    {% if main_data.phone_numbers %}
+        <button class="collapsible">Phone Numbers ({{ main_data.phone_numbers|length }})</button>
         <div class="content">
             <ul>
-            {% for phone in data.phone_numbers %}
+            {% for phone in main_data.phone_numbers %}
                 <li><a href="tel:{{ phone }}">{{ phone }}</a></li>
             {% endfor %}
             </ul>
         </div>
     {% endif %}
-    {% if data.images %}
-        <button class="collapsible">Images ({{ data.images|length }})</button>
+    {% if main_data.images %}
+        <button class="collapsible">Images ({{ main_data.images|length }})</button>
         <div class="content">
             <ul>
-            {% for img in data.images %}
+            {% for img in main_data.images %}
                 <li><img src="{{ img }}" alt="Image" style="max-width:200px;"></li>
             {% endfor %}
             </ul>
         </div>
     {% endif %}
-    {% if data.videos %}
-        <button class="collapsible">Videos ({{ data.videos|length }})</button>
+    {% if main_data.videos %}
+        <button class="collapsible">Videos ({{ main_data.videos|length }})</button>
         <div class="content">
             <ul>
-            {% for videos in data.videos %}
-                <li><iframe src="{{ videos }}" frameborder="0" allowfullscreen style="max-width: 600px; width: 100%; height: 315px;"></iframe></li>
+            {% for video in main_data.videos %}
+                <li><iframe src="{{ video }}" frameborder="0" allowfullscreen style="max-width: 600px; width: 100%; height: 315px;"></iframe></li>
             {% endfor %}
             </ul>
         </div>
     {% endif %}
-    {% if data.nips %} 
-        <button class="collapsible">NIPs ({{ data.nips|length }})</button>
+    {% if main_data.nips %}
+        <button class="collapsible">NIPs ({{ main_data.nips|length }})</button>
         <div class="content">
             <ul>
-            {% for nip in data.nips %}
+            {% for nip in main_data.nips %}
                 <li>{{ nip }}</li>
             {% endfor %}
             </ul>
         </div>
     {% endif %}
+
+    <h2>Subpages:</h2>
+    {% for subpage in main_data.subpages %}
+        {% if subpage.emails or subpage.phone_numbers or subpage.images or subpage.videos or subpage.nips %}
+            <h3>Results for {{ subpage.url }}:</h3>
+            {% if subpage.emails %}
+                <button class="collapsible">Emails ({{ subpage.emails|length }})</button>
+                <div class="content">
+                    <ul>
+                    {% for email in subpage.emails %}
+                        <li><a href="mailto:{{ email }}">{{ email }}</a></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if subpage.phone_numbers %}
+                <button class="collapsible">Phone Numbers ({{ subpage.phone_numbers|length }})</button>
+                <div class="content">
+                    <ul>
+                    {% for phone in subpage.phone_numbers %}
+                        <li><a href="tel:{{ phone }}">{{ phone }}</a></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if subpage.images %}
+                <button class="collapsible">Images ({{ subpage.images|length }})</button>
+                <div class="content">
+                    <ul>
+                    {% for img in subpage.images %}
+                        <li><img src="{{ img }}" alt="Image" style="max-width:200px;"></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if subpage.videos %}
+                <button class="collapsible">Videos ({{ subpage.videos|length }})</button>
+                <div class="content">
+                    <ul>
+                    {% for video in subpage.videos %}
+                        <li><iframe src="{{ video }}" frameborder="0" allowfullscreen style="max-width: 600px; width: 100%; height: 315px;"></iframe></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if subpage.nips %}
+                <button class="collapsible">NIPs ({{ subpage.nips|length }})</button>
+                <div class="content">
+                    <ul>
+                    {% for nip in subpage.nips %}
+                        <li>{{ nip }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
     {% endif %}
+
     <a href="/stats" class="stats-button">Stats & Plots</a>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
