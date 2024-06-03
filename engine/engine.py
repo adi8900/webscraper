@@ -2,7 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from bson import ObjectId
 import worker
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -25,15 +25,33 @@ class RequestHandler(BaseHTTPRequestHandler):
         result = worker.run_multiprocessing_task(url, data_types)
 
         client = MongoClient('mongodb://mongodb:27017')
-        
         db = client['web_scraper']
         collection = db['data']
-        insert_result = collection.insert_one(result)
-        
-        result['_id'] = str(insert_result.inserted_id)
+        unique_data = {
+            'emails': list(set(result.get('emails', []))),
+            'phone_numbers': list(set(result.get('phone_numbers', []))),
+            'images': list(set(result.get('images', []))),
+            'videos': list(set(result.get('videos', []))),
+            'nips': list(set(result.get('nips', []))),
+            'url': result['url']
+        }
+        operations = []
+        for email in unique_data['emails']:
+            operations.append(UpdateOne({'emails': email}, {'$set': {'emails': email}}, upsert=True))
+        for phone_number in unique_data['phone_numbers']:
+            operations.append(UpdateOne({'phone_numbers': phone_number}, {'$set': {'phone_numbers': phone_number}}, upsert=True))
+        for image in unique_data['images']:
+            operations.append(UpdateOne({'images': image}, {'$set': {'images': image}}, upsert=True))
+        for video in unique_data['videos']:
+            operations.append(UpdateOne({'videos': video}, {'$set': {'videos': video}}, upsert=True))
+        for nip in unique_data['nips']:
+            operations.append(UpdateOne({'nips': nip}, {'$set': {'nips': nip}}, upsert=True))
+
+        if operations:
+            collection.bulk_write(operations)
 
         self._set_response()
-        self.wfile.write(json.dumps(result, cls=JSONEncoder).encode('utf-8'))
+        self.wfile.write(json.dumps(unique_data, cls=JSONEncoder).encode('utf-8'))
 
 def run(server_class=HTTPServer, handler_class=RequestHandler, port=8000):
     server_address = ('', port)

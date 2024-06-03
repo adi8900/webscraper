@@ -27,7 +27,7 @@
     {% if data %}
     <h2>Results:</h2>
     {% if data.emails %}
-        <button class="collapsible">Emails</button>
+        <button class="collapsible">Emails ({{ data.emails|length }})</button>
         <div class="content">
             <ul>
             {% for email in data.emails %}
@@ -37,7 +37,7 @@
         </div>
     {% endif %}
     {% if data.phone_numbers %}
-        <button class="collapsible">Phone Numbers</button>
+        <button class="collapsible">Phone Numbers ({{ data.phone_numbers|length }})</button>
         <div class="content">
             <ul>
             {% for phone in data.phone_numbers %}
@@ -47,7 +47,7 @@
         </div>
     {% endif %}
     {% if data.images %}
-        <button class="collapsible">Images</button>
+        <button class="collapsible">Images ({{ data.images|length }})</button>
         <div class="content">
             <ul>
             {% for img in data.images %}
@@ -57,7 +57,7 @@
         </div>
     {% endif %}
     {% if data.videos %}
-        <button class="collapsible">Videos</button>
+        <button class="collapsible">Videos ({{ data.videos|length }})</button>
         <div class="content">
             <ul>
             {% for videos in data.videos %}
@@ -67,7 +67,7 @@
         </div>
     {% endif %}
     {% if data.nips %} 
-        <button class="collapsible">NIPs</button>
+        <button class="collapsible">NIPs ({{ data.nips|length }})</button>
         <div class="content">
             <ul>
             {% for nip in data.nips %}

@@ -70,15 +70,15 @@ def fetch_and_parse(url, data_type):
     parsed_data = {'url': url}
     
     if 'emails' in data_type or 'all' in data_type:
-        parsed_data['emails'] = parse_emails(html)
+        parsed_data['emails'] = list(set(parse_emails(html)))
     if 'phone_numbers' in data_type or 'all' in data_type:
-        parsed_data['phone_numbers'] = parse_phone_numbers(html)
+        parsed_data['phone_numbers'] = list(set(parse_phone_numbers(html)))
     if 'images' in data_type or 'all' in data_type:
-        parsed_data['images'] = parse_images(html, base_url)
+        parsed_data['images'] = list(set(parse_images(html, base_url)))
     if 'videos' in data_type or 'all' in data_type:
-        parsed_data['videos'] = parse_videos(html, base_url)
+        parsed_data['videos'] = list(set(parse_videos(html, base_url)))
     if 'nips' in data_type or 'all' in data_type:
-        parsed_data['nips'] = parse_nip(html)
+        parsed_data['nips'] = list(set(parse_nip(html)))
 
     return parsed_data
     
