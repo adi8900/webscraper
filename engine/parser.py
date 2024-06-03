@@ -8,7 +8,8 @@ def fetch(url):
     return response.text
 
 def parse_emails(html):
-    emails = re.findall(r'[\w\.-]+@[\w\.-]+', html)
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    emails = re.findall(email_pattern, html)
     return emails
 
 def parse_phone_numbers(html):
