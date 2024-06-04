@@ -25,9 +25,10 @@
         <button type="submit">Fetch</button>
     </form>
     {% if main_data %}
-    <h2>Results for {{ main_data.url }}:</h2>
+    <h2 class="collapsible" >{{ main_data.url }}:</h2>
+    <div class="content">
     {% if main_data.emails %}
-        <button class="collapsible">Emails ({{ main_data.emails|length }})</button>
+        <button class="collapsible data-button">Emails ({{ main_data.emails|length }})</button>
         <div class="content">
             <ul>
             {% for email in main_data.emails %}
@@ -37,7 +38,7 @@
         </div>
     {% endif %}
     {% if main_data.phone_numbers %}
-        <button class="collapsible">Phone Numbers ({{ main_data.phone_numbers|length }})</button>
+        <button class="collapsible data-button">Phone Numbers ({{ main_data.phone_numbers|length }})</button>
         <div class="content">
             <ul>
             {% for phone in main_data.phone_numbers %}
@@ -47,7 +48,7 @@
         </div>
     {% endif %}
     {% if main_data.images %}
-        <button class="collapsible">Images ({{ main_data.images|length }})</button>
+        <button class="collapsible data-button">Images ({{ main_data.images|length }})</button>
         <div class="content">
             <ul>
             {% for img in main_data.images %}
@@ -57,7 +58,7 @@
         </div>
     {% endif %}
     {% if main_data.videos %}
-        <button class="collapsible">Videos ({{ main_data.videos|length }})</button>
+        <button class="collapsible data-button">Videos ({{ main_data.videos|length }})</button>
         <div class="content">
             <ul>
             {% for video in main_data.videos %}
@@ -67,7 +68,7 @@
         </div>
     {% endif %}
     {% if main_data.nips %}
-        <button class="collapsible">NIPs ({{ main_data.nips|length }})</button>
+        <button class="collapsible data-button">NIPs ({{ main_data.nips|length }})</button>
         <div class="content">
             <ul>
             {% for nip in main_data.nips %}
@@ -76,13 +77,14 @@
             </ul>
         </div>
     {% endif %}
-
+</div>
     <h2>Subpages:</h2>
     {% for subpage in main_data.subpages %}
         {% if subpage.emails or subpage.phone_numbers or subpage.images or subpage.videos or subpage.nips %}
-            <h3>Results for {{ subpage.url }}:</h3>
+            <h3 class="collapsible">{{ subpage.url }}:</h3>
+            <div class="content">
             {% if subpage.emails %}
-                <button class="collapsible">Emails ({{ subpage.emails|length }})</button>
+                <button class="collapsible data-button">Emails ({{ subpage.emails|length }})</button>
                 <div class="content">
                     <ul>
                     {% for email in subpage.emails %}
@@ -92,7 +94,7 @@
                 </div>
             {% endif %}
             {% if subpage.phone_numbers %}
-                <button class="collapsible">Phone Numbers ({{ subpage.phone_numbers|length }})</button>
+                <button class="collapsible data-button">Phone Numbers ({{ subpage.phone_numbers|length }})</button>
                 <div class="content">
                     <ul>
                     {% for phone in subpage.phone_numbers %}
@@ -102,7 +104,7 @@
                 </div>
             {% endif %}
             {% if subpage.images %}
-                <button class="collapsible">Images ({{ subpage.images|length }})</button>
+                <button class="collapsible data-button">Images ({{ subpage.images|length }})</button>
                 <div class="content">
                     <ul>
                     {% for img in subpage.images %}
@@ -112,7 +114,7 @@
                 </div>
             {% endif %}
             {% if subpage.videos %}
-                <button class="collapsible">Videos ({{ subpage.videos|length }})</button>
+                <button class="collapsible data-button">Videos ({{ subpage.videos|length }})</button>
                 <div class="content">
                     <ul>
                     {% for video in subpage.videos %}
@@ -122,7 +124,7 @@
                 </div>
             {% endif %}
             {% if subpage.nips %}
-                <button class="collapsible">NIPs ({{ subpage.nips|length }})</button>
+                <button class="collapsible data-button">NIPs ({{ subpage.nips|length }})</button>
                 <div class="content">
                     <ul>
                     {% for nip in subpage.nips %}
@@ -132,6 +134,7 @@
                 </div>
             {% endif %}
         {% endif %}
+    </div>
     {% endfor %}
     {% endif %}
 
