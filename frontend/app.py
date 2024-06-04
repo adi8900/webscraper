@@ -457,11 +457,76 @@ def download_csv():
         {
             '$group': {
                 '_id': '$url',
-                'total_emails': {'$sum': {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]}},
-                'total_phone_numbers': {'$sum': {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]}},
-                'total_images': {'$sum': {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]}},
-                'total_videos': {'$sum': {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]}},
-                'total_nips': {'$sum': {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]}},
+                'total_emails': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$emails'}, {'$size': '$emails'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.emails'}, {'$size': '$$subpage.emails'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_phone_numbers': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$phone_numbers'}, {'$size': '$phone_numbers'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.phone_numbers'}, {'$size': '$$subpage.phone_numbers'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_images': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$images'}, {'$size': '$images'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.images'}, {'$size': '$$subpage.images'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_videos': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$videos'}, {'$size': '$videos'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.videos'}, {'$size': '$$subpage.videos'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
+                'total_nips': {
+                    '$sum': {
+                        '$add': [
+                            {'$cond': [{'$isArray': '$nips'}, {'$size': '$nips'}, 0]},
+                            {'$sum': {
+                                '$map': {
+                                    'input': {'$ifNull': ['$subpages', []]},
+                                    'as': 'subpage',
+                                    'in': {'$cond': [{'$isArray': '$$subpage.nips'}, {'$size': '$$subpage.nips'}, 0]}
+                                }
+                            }}
+                        ]
+                    }
+                },
                 'total_scrapes': {'$sum': 1}
             }
         },
@@ -471,13 +536,21 @@ def download_csv():
             }
         }
     ]
+
     stats = list(collection.aggregate(pipeline))
+
+    for stat in stats:
+        stat['total_emails'] = stat['total_emails'] // 2
+        stat['total_phone_numbers'] = stat['total_phone_numbers'] // 2
+        stat['total_images'] = stat['total_images'] // 2
+        stat['total_videos'] = stat['total_videos'] // 2
+        stat['total_nips'] = stat['total_nips'] // 2
 
     si = io.StringIO()
     cw = csv.writer(si)
-    cw.writerow(['URL', 'Total Emails', 'Total Phone Numbers', 'Total Images', 'Total Addresses', 'Total NIPs', 'Total Scrapes'])
+    cw.writerow(['URL', 'Total Emails', 'Total Phone Numbers', 'Total Images', 'Total Videos', 'Total NIPs', 'Total Scrapes'])
     for stat in stats:
-        cw.writerow([stat['_id'], stat['total_emails'], stat['total_phone_numbers'], stat['total_images'], stat['total_addresses'], stat['total_nips'], stat['total_scrapes']])
+        cw.writerow([stat['_id'], stat['total_emails'], stat['total_phone_numbers'], stat['total_images'], stat['total_videos'], stat['total_nips'], stat['total_scrapes']])
 
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=scraping_stats.csv"
