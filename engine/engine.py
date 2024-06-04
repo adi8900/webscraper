@@ -3,6 +3,8 @@ import requests
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from bson import ObjectId
 import worker
+import asyncio
+import aiohttp
 from pymongo import MongoClient
 
 class JSONEncoder(json.JSONEncoder):
@@ -22,19 +24,22 @@ class RequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         task = json.loads(post_data)
 
-        combined_result = process_task(task)
+        combined_result = asyncio.run(process_task(task))
 
         self._set_response()
         self.wfile.write(json.dumps(combined_result, cls=JSONEncoder).encode('utf-8'))
 
-def distribute_task_to_slave(task):
+async def distribute_task_to_slave(task):
     slave_url = "http://192.168.2.190:8000/task"
-    response = requests.post(slave_url, json=task)
-    return response.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(slave_url, json=task) as response:
+            return await response.json()
 
-def process_task(task):
-    slave_result = distribute_task_to_slave(task)
-    local_result = worker.run_multiprocessing_task(task['url'], task.get('data_types', ['all']))
+async def process_task(task):
+    slave_task = asyncio.create_task(distribute_task_to_slave(task))
+    local_task = asyncio.to_thread(worker.run_multiprocessing_task, task['url'], task.get('data_types', ['all']))
+
+    slave_result, local_result = await asyncio.gather(slave_task, local_task)
     combined_result = combine_results(local_result, slave_result)
     store_results(combined_result)
     return combined_result
