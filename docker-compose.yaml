@@ -19,6 +19,7 @@ services:
     depends_on:
       - mongodb
     environment:
+      - SLAVE_URL=http://192.168.2.190:8000
       - MONGODB_URI=mongodb://mongodb:27017
 
   mongodb:
